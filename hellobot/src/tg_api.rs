@@ -2,7 +2,7 @@
 use frankenstein::{GetUpdatesParams, TelegramApi, Update};
 use kinode_process_lib::{
     http::{send_request, send_request_await_response, Method},
-    our_capabilities, spawn, Address, OnExit, ProcessId, Request,
+    our_capabilities, spawn, Address, OnExit, Request,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -29,7 +29,7 @@ pub fn init_tg_bot(
     our: Address,
     token: &str,
     params: Option<GetUpdatesParams>,
-) -> anyhow::Result<(Api, ProcessId)> {
+) -> anyhow::Result<(Api, Address)> {
     let tg_bot_wasm_path = format!("{}/pkg/tg.wasm", our.package_id());
 
     let our_caps = our_capabilities();
@@ -49,15 +49,17 @@ pub fn init_tg_bot(
         params,
     };
 
+    let worker_address = Address {
+        node: our.node.clone(),
+        process: process_id.clone(),
+    };
+
     let _ = Request::new()
-        .target(Address {
-            node: our.node.clone(),
-            process: process_id.clone(),
-        })
+        .target(worker_address.clone())
         .body(serde_json::to_vec(&init)?)
         .send();
 
-    Ok((api, process_id))
+    Ok((api, worker_address))
 }
 
 pub struct Api {
