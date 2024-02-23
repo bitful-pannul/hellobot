@@ -2,7 +2,7 @@
 use frankenstein::{GetUpdatesParams, TelegramApi, Update};
 use kinode_process_lib::{
     http::{send_request, send_request_await_response, Method},
-    our_capabilities, spawn, Address, OnExit, Request,
+    our_capabilities, spawn, Address, OnExit, ProcessId, Request,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -11,7 +11,6 @@ use std::{path::PathBuf, str::FromStr};
 static BASE_API_URL: &str = "https://api.telegram.org/bot";
 
 #[derive(Debug, Serialize, Deserialize)]
-// #[serde_untagged]
 pub struct TgInitialize {
     pub token: String,
     pub params: Option<GetUpdatesParams>,
@@ -32,14 +31,16 @@ pub fn init_tg_bot(
 ) -> anyhow::Result<(Api, Address)> {
     let tg_bot_wasm_path = format!("{}/pkg/tg.wasm", our.package_id());
 
+    // give spawned process both our caps, and grant http_client messaging.
     let our_caps = our_capabilities();
+    let http_client = ProcessId::from_str("http_client:distro:sys").unwrap();
 
     let process_id = spawn(
         None,
         &tg_bot_wasm_path,
         OnExit::None,
         our_caps,
-        vec![],
+        vec![http_client],
         false,
     )?;
 
@@ -121,6 +122,7 @@ impl TelegramApi for Api {
 }
 
 impl Api {
+    #[allow(unused)]
     pub fn request_no_wait<T1: serde::ser::Serialize>(
         &self,
         method: &str,
