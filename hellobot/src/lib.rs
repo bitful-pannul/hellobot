@@ -6,6 +6,7 @@ use kinode_process_lib::{
 };
 
 mod tg_api;
+use tg_api::{Api, GetUpdatesParams, Update};
 
 wit_bindgen::generate!({
     path: "wit",
@@ -15,21 +16,10 @@ wit_bindgen::generate!({
     },
 });
 
-#[derive(Debug, Serialize, Deserialize)]
-enum ChatRequest {
-    Send { target: String, message: String },
-    History,
-}
 
-#[derive(Debug, Serialize, Deserialize)]
-enum ChatResponse {
-    Ack,
-    History { messages: MessageArchive },
-}
 
-type MessageArchive = Vec<(String, String)>;
 
-fn handle_message(our: &Address, message_archive: &mut MessageArchive) -> anyhow::Result<()> {
+fn handle_message(our: &Address) -> anyhow::Result<()> {
     let message = await_message()?;
 
     match message {
@@ -41,38 +31,8 @@ fn handle_message(our: &Address, message_archive: &mut MessageArchive) -> anyhow
             ref body,
             ..
         } => match serde_json::from_slice(body)? {
-            ChatRequest::Send {
-                ref target,
-                ref message,
-            } => {
-                if target == &our.node {
-                    println!("hellobot|{}: {}", source.node, message);
-                    message_archive.push((source.node.clone(), message.clone()));
-                } else {
-                    let _ = Request::new()
-                        .target(Address {
-                            node: target.clone(),
-                            process: ProcessId::from_str("hellobot:hellobot:template.os")?,
-                        })
-                        .body(body.clone())
-                        .send_and_await_response(5)?
-                        .unwrap();
-                }
-                Response::new()
-                    .body(serde_json::to_vec(&ChatResponse::Ack).unwrap())
-                    .send()
-                    .unwrap();
-            }
-            ChatRequest::History => {
-                Response::new()
-                    .body(
-                        serde_json::to_vec(&ChatResponse::History {
-                            messages: message_archive.clone(),
-                        })
-                        .unwrap(),
-                    )
-                    .send()
-                    .unwrap();
+            TgUpdate { updates } => {
+                println!("got updates..");
             }
         },
     }
@@ -82,12 +42,10 @@ fn handle_message(our: &Address, message_archive: &mut MessageArchive) -> anyhow
 call_init!(init);
 
 fn init(our: Address) {
-    println!("hellobot: begin");
-
-    let mut message_archive: MessageArchive = Vec::new();
+    println!("hellobot: to begin, give me a token!");
 
     loop {
-        match handle_message(&our, &mut message_archive) {
+        match handle_message(&our) {
             Ok(()) => {}
             Err(e) => {
                 println!("hellobot: error: {:?}", e);
