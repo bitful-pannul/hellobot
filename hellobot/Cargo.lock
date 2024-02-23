@@ -604,6 +604,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "frankenstein"
+version = "0.30.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e4cfa14550cdf100109cf9d004d162efae2ba21e2e28b6254e58a2aff3b08f5"
+dependencies = [
+ "serde",
+ "thiserror",
+ "typed-builder",
+]
+
+[[package]]
 name = "funty"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -693,9 +704,11 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bincode",
+ "frankenstein",
  "kinode_process_lib",
  "serde",
  "serde_json",
+ "url",
  "wit-bindgen",
 ]
 
@@ -1588,6 +1601,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "typed-builder"
+version = "0.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "444d8748011b93cb168770e8092458cb0f8854f931ff82fdf6ddfbd72a9c933e"
+dependencies = [
+ "typed-builder-macro",
+]
+
+[[package]]
+name = "typed-builder-macro"
+version = "0.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "563b3b88238ec95680aef36bdece66896eaa7ce3c0f1b4f39d38fb2435261352"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.50",
 ]
 
 [[package]]

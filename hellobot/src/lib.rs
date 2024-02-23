@@ -1,7 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-use kinode_process_lib::{await_message, call_init, println, Address, Message, ProcessId, Request, Response};
+use kinode_process_lib::{
+    await_message, call_init, println, Address, Message, ProcessId, Request, Response,
+};
+
+mod tg_api;
 
 wit_bindgen::generate!({
     path: "wit",
@@ -48,9 +52,7 @@ fn handle_message(our: &Address, message_archive: &mut MessageArchive) -> anyhow
                     let _ = Request::new()
                         .target(Address {
                             node: target.clone(),
-                            process: ProcessId::from_str(
-                                "hellobot:hellobot:template.os",
-                            )?,
+                            process: ProcessId::from_str("hellobot:hellobot:template.os")?,
                         })
                         .body(body.clone())
                         .send_and_await_response(5)?
@@ -72,7 +74,7 @@ fn handle_message(our: &Address, message_archive: &mut MessageArchive) -> anyhow
                     .send()
                     .unwrap();
             }
-        }
+        },
     }
     Ok(())
 }
@@ -93,4 +95,3 @@ fn init(our: Address) {
         };
     }
 }
-
