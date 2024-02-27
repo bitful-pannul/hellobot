@@ -4,7 +4,7 @@ use frankenstein::{
 };
 use kinode_process_lib::{await_message, call_init, println, Address, Message};
 mod tg_api;
-use tg_api::{init_tg_bot, Api, TgUpdate};
+use tg_api::{init_tg_bot, Api, TgResponse};
 
 wit_bindgen::generate!({
     path: "wit",
@@ -26,7 +26,8 @@ fn handle_message(_our: &Address, api: &Api, worker: &Address) -> anyhow::Result
             ref body,
             ..
         } => match serde_json::from_slice(body)? {
-            TgUpdate { updates } => {
+            TgResponse::Update(tg_update) => {
+                let updates = tg_update.updates;
                 // assert update is from our worker
                 if source != worker {
                     return Err(anyhow::anyhow!(
@@ -84,6 +85,9 @@ fn handle_message(_our: &Address, api: &Api, worker: &Address) -> anyhow::Result
                         }
                     }
                 }
+            }
+            TgResponse::Error(e) => {
+                println!("error from tg worker: {:?}", e);
             }
         },
     }
